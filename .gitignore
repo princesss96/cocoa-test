@@ -15,3 +15,10 @@ data*/
 
 # mac
 .DS_Store
+
+# logs (keep folder, ignore files)
+logs/*.log
+logs/*.txt
+logs/*.csv
+logs/*.json
+!logs/.gitkeep
