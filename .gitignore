@@ -1,0 +1,17 @@
+# python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# outputs / checkpoints
+runs*/
+*.pt
+*.pth
+*.safetensors
+
+# datasets / zips
+data*/
+*.zip
+
+# mac
+.DS_Store
