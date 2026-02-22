@@ -9,22 +9,20 @@ Supports:
 
 - Optional CSV dataset (path,label) via CSVCocoaDataset without requiring pandas.
 """
-from PIL import ImageFile
-ImageFile.LOAD_TRUNCATED_IMAGES = True
 from __future__ import annotations
 
 import csv
 import os
+import random
 from dataclasses import dataclass
 from typing import Optional, Tuple, List
 
-from PIL import Image
+from PIL import Image, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
-from tochvision.transforms import InterpolationMode
-
 
 @dataclass
 class DataInfo:
@@ -39,7 +37,11 @@ class RandomFixedRotate:
         self.angles = angles
     def __call__(self, img: Image.Image):
         angle = random.choice(self.angles)
-        return img.rotate(angle, resample=Image.BILINEAR, expand=True)
+        try:
+            resample = Image.Resampling.BILINEAR # pillow >= 9/10
+        except AttributeError:
+            resample = Image.BILINEAR #Pillow lama
+        return img.rotate(angle, resample=resample, expand=True)
 
 def build_transforms(img_size: int = 224):
     train_tf = transforms.Compose([
