@@ -1,7 +1,7 @@
 # cocoa-test
 ## Cocoa Pod Disease Classification (V1–V3) + Optional YOLOv8 Severity (%)
 
-This repo supports **PhD-style experiments** for cocoa pod disease recognition using three comparable classification variants:
+cocoa pod disease recognition using three comparable classification variants:
 
 - **V1 — CNN Only**
 - **V2 — ViT Only**
