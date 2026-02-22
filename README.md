@@ -177,9 +177,3 @@ Keep augmentation settings the same
 Use the same seed (e.g., --seed 42)
 
 Use separate --out_dir per run
-
-
----
-
-If you tell me **what you want the README title to be** (keep `cocoa-test` or change to “Cocoa Pod Disease Classification”), I can tailor the top section to match your thesis wording exactly.
-::contentReference[oaicite:5]{index=5}
