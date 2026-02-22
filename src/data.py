@@ -46,16 +46,17 @@ class RandomFixedRotate:
 def build_transforms(img_size: int = 224):
     train_tf = transforms.Compose([
         transforms.Resize(int(img_size * 1.15)),
-        transforms.CenterCrop(img_size),
 
-        # Ayikpa-style: fixed-angle rotations
+        # rotate dulu (boleh expand=True)
         RandomFixedRotate(AYIKPA_ANGLES),
 
-        # Optional: small translation like you used before
         transforms.RandomAffine(
             degrees=0,
             translate=(0.10, 0.10)
         ),
+
+        # pastikan output size konsisten
+        transforms.CenterCrop(img_size),
 
         transforms.ToTensor(),
         transforms.Normalize((0.485,0.456,0.406),(0.229,0.224,0.225)),
