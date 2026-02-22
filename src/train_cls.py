@@ -172,7 +172,7 @@ def main():
 
     # Optional final test
     if test_loader is not None:
-        ckpt = torch.load(best_path, map_location=device)
+        ckpt = torch.load(best_path, map_location=device, weights_only=False)
         model.load_state_dict(ckpt["model_state"])
         if ckpt.get("ema_state") is not None:
             # If EMA exists, prefer it for evaluation
