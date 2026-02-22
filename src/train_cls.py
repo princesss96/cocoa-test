@@ -122,7 +122,7 @@ def main():
     counts = torch.bincount(torch.tensor(train_ds.targets, dtype=torch.long))
     weights = counts.sum().float() / (len(counts) * counts.clamp(min=1).float())
 
-    criterion = nn.CrossEntropyLoss(weight=weights.to(device))
+    criterion = nn.CrossEntropyLoss()
 
     print("Class counts:", counts.tolist())
     print("Class weights:", [round(w, 4) for w in weights.tolist()])
