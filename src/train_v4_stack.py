@@ -43,7 +43,6 @@ def make_backbone(name: str):
         return m, feat_dim
     if name == "efficientnet_b0":
         m = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT)
-        # classifier = Sequential(Dropout, Linear)
         feat_dim = m.classifier[1].in_features
         m.classifier = torch.nn.Identity()
         return m, feat_dim
@@ -112,13 +111,13 @@ def main():
     Xte, yte = extract_features(backbone, test_loader, device)
 
     # PCA fit on TRAIN only (avoid leakage)
-    pca = PCA(n_components=min(args.pca_dim, Xtr.shape[1]), random_state=args.seed)
+    n_comp = min(args.pca_dim, Xtr.shape[1], Xtr.shape[0] - 1)
+    pca = PCA(n_components=n_comp, random_state=args.seed)
     Xtr_p = pca.fit_transform(Xtr)
     Xva_p = pca.transform(Xva)
     Xte_p = pca.transform(Xte)
     print("PCA explained variance ratio sum:", float(np.sum(pca.explained_variance_ratio_)))
 
-    # Stacking (balanced)
     base = [
         ("svm", SVC(kernel="rbf", probability=True, class_weight="balanced", C=3.0, gamma="scale")),
         ("rf",  RandomForestClassifier(n_estimators=400, random_state=args.seed, class_weight="balanced_subsample")),
@@ -138,19 +137,16 @@ def main():
     print("Training stacking classifier...")
     clf.fit(Xtr_p, ytr)
 
-    # Optional: report VAL
     yva_pred = clf.predict(Xva_p)
     val_m = metrics_dict(yva, yva_pred)
     print("\nVal metrics:", {k:v for k,v in val_m.items() if k!="confusion_matrix"})
     print("Val confusion matrix:\n", np.array(val_m["confusion_matrix"]))
 
-    # TEST
     yte_pred = clf.predict(Xte_p)
     test_m = metrics_dict(yte, yte_pred)
     print("\nTest metrics:", {k:v for k,v in test_m.items() if k!="confusion_matrix"})
     print("Confusion matrix:\n", np.array(test_m["confusion_matrix"]))
 
-    # Save artifacts
     np.save(os.path.join(args.out_dir, "pca_components.npy"), pca.components_)
     with open(os.path.join(args.out_dir, "meta.json"), "w") as f:
         json.dump({
