@@ -14,6 +14,7 @@ An optional second stage (YOLO) can be used for **lesion localization** and **se
 ## 1) Project Overview
 
 ### 1.1 Classification Task (Image-level)
+
 Classes:
 - **Healthy**
 - **BPR** (Black Pod Rot)
@@ -32,6 +33,7 @@ Metrics reported:
 - Cohen’s Kappa
 
 ### 1.2 Optional Severity (Percentage)
+
 Severity is computed as:
 
 **Severity (%) = (Total Lesion Area / Pod Area) × 100**
@@ -44,7 +46,7 @@ Best practice:
 
 ## 2) Preferred Dataset Folder (Classification)
 
-✅ Preferred folder name: `data_cls/` (PyTorch ImageFolder format)
+✅ Preferred folder name: `data_cls/` (PyTorch `ImageFolder` format)
 
 Expected layout:
 
@@ -67,7 +69,7 @@ Notes:
 
 Keep the class folder names exactly: Healthy, BPR, FPR
 
-If your original dataset uses Sana, Fito, Monilia, do mapping/renaming during preprocessing.
+If your original dataset uses Sana, Fito, Monilia, do mapping/renaming during preprocessing
 
 3) Run in Google Colab (Recommended)
 A) Get the code (recommended: clone from GitHub)
@@ -80,10 +82,7 @@ A) Get the code (recommended: clone from GitHub)
 %cd /content/cocoa_hybrid_project
 B) Install dependencies
 !pip -q install -r requirements.txt
-C) Point to your dataset
-
-If your dataset is in Google Drive:
-
+C) Point to your dataset (Google Drive)
 from google.colab import drive
 drive.mount("/content/drive")
 
@@ -92,10 +91,11 @@ Example path:
 /content/drive/MyDrive/data_cls
 D) Train V1 / V2 / V3 (choose one)
 
-✅ Tip: use a unique --out_dir per run to avoid overwriting results.
-✅ Tip: use a fixed --seed for reproducibility.
+✅ Tip: use a unique --out_dir per run to avoid overwriting results
+✅ Tip: use a fixed --seed for reproducibility
 
 V1 — CNN Only
+
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls \
   --variant cnn \
@@ -103,7 +103,9 @@ V1 — CNN Only
   --batch_size 32 \
   --seed 42 \
   --out_dir runs_cls_v1_cnn
+
 V2 — ViT Only
+
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls \
   --variant vit \
@@ -111,7 +113,9 @@ V2 — ViT Only
   --batch_size 32 \
   --seed 42 \
   --out_dir runs_cls_v2_vit
+
 V3 — CNN + ViT Concat
+
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls \
   --variant concat \
@@ -121,8 +125,6 @@ V3 — CNN + ViT Concat
   --out_dir runs_cls_v3_concat
 E) Save training output to a log file (optional but recommended)
 !mkdir -p logs
-
-Example:
 
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls \
@@ -172,7 +174,7 @@ To compare V1 vs V2 vs V3 fairly:
 
 Use the same dataset split (train/val/test)
 
-Keep these the same across variants:
+Keep these identical across variants:
 
 --epochs, --batch_size, --img_size, --lr, --weight_decay
 
@@ -186,20 +188,21 @@ Use separate --out_dir per run
 
 If you see SyntaxError: invalid syntax when running shell commands, you probably ran it as Python.
 
-Use !command ... or %%bash in Colab.
+Use:
+
+!command ... (recommended)
+
+or %%bash cell magic
 
 Example:
 
 !python -m src.train_cls --data_dir data_cls --variant cnn
-
-### Now publish it to GitHub (on your Mac)
-
-Run this **on your Mac terminal**:
-
-```bash
+Publish README changes to GitHub (Mac)
 cd ~/Projects/cocoa-test
-open -e README.md   # paste the updated README, save, close
+open -e README.md   # paste this README, save, close
 
 git add README.md
-git commit -m "Update README: data_cls layout + V1-V3 Colab instructions"
+git commit -m "Update README formatting and V1–V3 Colab instructions"
+git pull --rebase origin main
 git push
+::contentReference[oaicite:0]{index=0}
