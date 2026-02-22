@@ -21,7 +21,7 @@ from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 from torchvision import datasets, transforms
 
 @dataclass
@@ -115,6 +115,27 @@ def create_imagefolder_loaders(
 
     train_ds = datasets.ImageFolder(train_dir, transform=train_tf)
     val_ds = datasets.ImageFolder(val_dir, transform=eval_tf)
+    
+    targets = torch.tensor(train_ds.targets)
+    class_count = torch.bincount(targets)
+    class_weight = class_count.sum().float() / class_count.float()
+    sample_weight = class_weight[targets]  # weight ikut kelas setiap sample
+    
+    sampler = WeightedRandomSampler(
+    weights=sample_weight,
+    num_samples=len(sample_weight),
+    replacement=True
+)
+
+    train_loader = DataLoader(
+    train_ds,
+    batch_size=batch_size,
+    sampler=sampler,
+    shuffle=False,  # jangan shuffle bila guna sampler
+    num_workers=num_workers,
+    pin_memory=pin_memory
+)
+    
 
     test_loader: Optional[DataLoader] = None
     if os.path.isdir(test_dir):
