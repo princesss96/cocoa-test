@@ -1,5 +1,3 @@
-%%bash
-cat > /content/cocoa-test/src/train_v4_stack.py <<'PY'
 from __future__ import annotations
 
 import argparse, os, json, random
