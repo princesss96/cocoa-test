@@ -7,7 +7,7 @@ This repository supports **PhD-style experiments** for cocoa pod disease recogni
 - **V2 — ViT Only**
 - **V3 — CNN + ViT (Feature Concatenation)**
 
-An optional second stage (YOLO) can be used for **lesion localization** and **severity scoring (%)**.
+(Optional) A second stage (**YOLOv8**) can be used for **lesion localization** and **severity scoring (%)**.
 
 ---
 
@@ -40,7 +40,7 @@ Severity is computed as:
 
 Best practice:
 - YOLO dataset should include two classes: `pod` and `lesion`
-- If only `lesion` is labeled, severity can only be estimated relative to image area (less reliable)
+- If only `lesion` is labeled, severity is estimated relative to image area (less reliable)
 
 ---
 
@@ -67,35 +67,35 @@ data_cls/
 
 Notes:
 
-Keep the class folder names exactly: Healthy, BPR, FPR
+Keep folder names exactly: Healthy, BPR, FPR
 
-If your original dataset uses Sana, Fito, Monilia, do mapping/renaming during preprocessing
+If your original dataset uses Sana, Fito, Monilia, do mapping/renaming in preprocessing.
 
 3) Run in Google Colab (Recommended)
 A) Get the code (recommended: clone from GitHub)
 !git clone https://github.com/princesss96/cocoa-test.git
 %cd cocoa-test
 
-(Alternative: upload cocoa_hybrid_project.zip and unzip)
+(Alternative: upload a zip of the project code and unzip it.)
 
-!unzip -q cocoa_hybrid_project.zip -d /content/cocoa_hybrid_project
-%cd /content/cocoa_hybrid_project
 B) Install dependencies
 !pip -q install -r requirements.txt
 C) Point to your dataset (Google Drive)
 from google.colab import drive
 drive.mount("/content/drive")
 
-Example path:
+Example dataset path:
 
 /content/drive/MyDrive/data_cls
 D) Train V1 / V2 / V3 (choose one)
 
-✅ Tip: use a unique --out_dir per run to avoid overwriting results
-✅ Tip: use a fixed --seed for reproducibility
+✅ Tips:
+
+Use a unique --out_dir per run to avoid overwriting results
+
+Use a fixed --seed (e.g., 42) for reproducibility
 
 V1 — CNN Only
-
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls \
   --variant cnn \
@@ -103,9 +103,7 @@ V1 — CNN Only
   --batch_size 32 \
   --seed 42 \
   --out_dir runs_cls_v1_cnn
-
 V2 — ViT Only
-
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls \
   --variant vit \
@@ -113,9 +111,7 @@ V2 — ViT Only
   --batch_size 32 \
   --seed 42 \
   --out_dir runs_cls_v2_vit
-
 V3 — CNN + ViT Concat
-
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls \
   --variant concat \
@@ -136,7 +132,7 @@ E) Save training output to a log file (optional but recommended)
 
 Outputs:
 
-Checkpoints + metrics are saved into the folder you set in --out_dir (e.g., runs_cls_v2_vit/)
+Checkpoints + metrics are saved inside the folder you set in --out_dir (e.g., runs_cls_v2_vit/)
 
 4) Optional: YOLOv8 Lesion Detection + Severity (%)
 4.1 YOLO Dataset Layout (example)
@@ -190,19 +186,10 @@ If you see SyntaxError: invalid syntax when running shell commands, you probably
 
 Use:
 
-!command ... (recommended)
+!command ... (recommended), or
 
-or %%bash cell magic
+%%bash cell magic
 
 Example:
 
 !python -m src.train_cls --data_dir data_cls --variant cnn
-Publish README changes to GitHub (Mac)
-cd ~/Projects/cocoa-test
-open -e README.md   # paste this README, save, close
-
-git add README.md
-git commit -m "Update README formatting and V1–V3 Colab instructions"
-git pull --rebase origin main
-git push
-::contentReference[oaicite:0]{index=0}
