@@ -11,7 +11,7 @@ import os
 from typing import Dict, Tuple
 
 import torch
-from torch import nn
+import torch.nn as nn
 from torch.cuda.amp import autocast, GradScaler
 from tqdm import tqdm
 
@@ -117,7 +117,18 @@ def main():
 
     ema = ModelEMA(model, decay=args.ema_decay, device=device) if args.use_ema else None
 
-    criterion = nn.CrossEntropyLoss()
+    # --- class-weighted loss (handles imbalance) ----#
+    train_ds = train_loader.dataset
+    counts = torch.bincount(torch.tensor(train_ds.targets, dtype=torch.long))
+    weights = counts.sum().float() / (len(counts) * counts.clamp(min=1).float())
+
+    criterion = nn.CrossEntropyLoss(weight=weights.to(device))
+
+    print("Class counts:", counts.tolist())
+    print("Class weights:", [round(w, 4) for w in weights.tolist()])
+    # ---------------------------------------------
+
+    
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max(1, args.epochs))
 
