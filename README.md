@@ -1,56 +1,38 @@
-# cocoa-test
-## Cocoa Pod Disease Classification (V1–V3) + Optional YOLO Severity (%)
+# Cocoa Pod Disease: Hybrid CNN–ViT Classification + YOLOv8 Lesion Severity
 
-This repository supports **PhD-style experiments** for cocoa pod disease recognition using three comparable classification variants:
+This project implements the **two-stage pipeline** described in the research proposal:
 
-- **V1 — CNN Only**
-- **V2 — ViT Only**
-- **V3 — CNN + ViT (Feature Concatenation)**
+1) **Classification** (Healthy / Black Pod Rot (BPR) / Frosty Pod Rot (FPR)) using:
+   - CNN backbone (default: ResNet50)
+   - ViT backbone (default: ViT-Base/16)
+   - Fusion variants: CNN-only, ViT-only, Concat, **Attention Fusion** (+ optional EMA)
 
-(Optional) A second stage (**YOLOv8**) can be used for **lesion localization** and **severity scoring (%)**.
-
----
-
-## 1) Project Overview
-
-### 1.1 Classification Task (Image-level)
-
-Classes:
-- **Healthy**
-- **BPR** (Black Pod Rot)
-- **FPR** (Frosty Pod Rot)
-
-Variants:
-- **V1 (CNN Only)**: CNN backbone (e.g., ResNet50)
-- **V2 (ViT Only)**: ViT backbone (e.g., ViT-Base/16)
-- **V3 (CNN+ViT Concat)**: concatenated features from CNN + ViT
-
-Metrics reported:
-- Accuracy
-- Macro-F1
-- Precision (Macro)
-- Recall (Macro)
-- Cohen’s Kappa
-
-### 1.2 Optional Severity (Percentage)
-
-Severity is computed as:
-
-**Severity (%) = (Total Lesion Area / Pod Area) × 100**
-
-Best practice:
-- YOLO dataset should include two classes: `pod` and `lesion`
-- If only `lesion` is labeled, severity is estimated relative to image area (less reliable)
+2) **Lesion localization** using **YOLOv8**, then compute a **severity score**:
+   - `severity = lesion_area / pod_area`
+   - Works best if your YOLO dataset includes two classes: `pod` and `lesion`.
+   - If you only label `lesion`, severity can be computed relative to full image area as a fallback.
 
 ---
 
-## 2) Preferred Dataset Folder (Classification)
+## 1) Run in Google Colab (recommended)
 
-✅ Preferred folder name: `data_cls/` (PyTorch `ImageFolder` format)
+### A) Upload and unzip
+Upload `cocoa_hybrid_project.zip` to Colab, then:
 
-Expected layout:
+```bash
+!unzip -q cocoa_hybrid_project.zip -d /content/cocoa_hybrid_project
+%cd /content/cocoa_hybrid_project
+```
 
-```text
+### B) Install dependencies
+```bash
+!pip -q install -r requirements.txt
+```
+
+### C) Train classification
+Prepare a classification dataset like:
+
+```
 data_cls/
   train/
     Healthy/
@@ -64,78 +46,20 @@ data_cls/
     Healthy/
     BPR/
     FPR/
+```
 
-Notes:
+Then run:
 
-Keep folder names exactly: Healthy, BPR, FPR
+```bash
+!python -m src.train_cls --data_dir data_cls --variant attn --epochs 20 --batch_size 32
+```
 
-If your original dataset uses Sana, Fito, Monilia, do mapping/renaming in preprocessing.
+Variants: `cnn`, `vit`, `concat`, `attn`
 
-3) Run in Google Colab (Recommended)
-A) Get the code (recommended: clone from GitHub)
-!git clone https://github.com/princesss96/cocoa-test.git
-%cd cocoa-test
+### D) Train YOLOv8 detection
+Prepare a YOLO dataset like:
 
-(Alternative: upload a zip of the project code and unzip it.)
-
-B) Install dependencies
-!pip -q install -r requirements.txt
-C) Point to your dataset (Google Drive)
-from google.colab import drive
-drive.mount("/content/drive")
-
-Example dataset path:
-
-/content/drive/MyDrive/data_cls
-D) Train V1 / V2 / V3 (choose one)
-
-✅ Tips:
-
-Use a unique --out_dir per run to avoid overwriting results
-
-Use a fixed --seed (e.g., 42) for reproducibility
-
-V1 — CNN Only
-!python -m src.train_cls \
-  --data_dir /content/drive/MyDrive/data_cls \
-  --variant cnn \
-  --epochs 20 \
-  --batch_size 32 \
-  --seed 42 \
-  --out_dir runs_cls_v1_cnn
-V2 — ViT Only
-!python -m src.train_cls \
-  --data_dir /content/drive/MyDrive/data_cls \
-  --variant vit \
-  --epochs 20 \
-  --batch_size 32 \
-  --seed 42 \
-  --out_dir runs_cls_v2_vit
-V3 — CNN + ViT Concat
-!python -m src.train_cls \
-  --data_dir /content/drive/MyDrive/data_cls \
-  --variant concat \
-  --epochs 20 \
-  --batch_size 32 \
-  --seed 42 \
-  --out_dir runs_cls_v3_concat
-E) Save training output to a log file (optional but recommended)
-!mkdir -p logs
-
-!python -m src.train_cls \
-  --data_dir /content/drive/MyDrive/data_cls \
-  --variant vit \
-  --epochs 20 \
-  --batch_size 32 \
-  --seed 42 \
-  --out_dir runs_cls_v2_vit 2>&1 | tee logs/v2_vit_train.log
-
-Outputs:
-
-Checkpoints + metrics are saved inside the folder you set in --out_dir (e.g., runs_cls_v2_vit/)
-
-4) Optional: YOLOv8 Lesion Detection + Severity (%)
-4.1 YOLO Dataset Layout (example)
+```
 data_det/
   images/
     train/
@@ -144,52 +68,35 @@ data_det/
     train/
     val/
   data.yaml
+```
 
-Example data.yaml:
+Example `data.yaml`:
 
-path: /content/cocoa-test/data_det
+```yaml
+path: /content/cocoa_hybrid_project/data_det
 train: images/train
 val: images/val
 names: [pod, lesion]
+```
 
 Train YOLO:
 
-!python -m src.train_yolo \
-  --data_yaml data_det/data.yaml \
-  --model yolov8n.pt \
-  --epochs 100 \
-  --imgsz 640
-5) Inference (Classification + Optional Severity)
+```bash
+!python -m src.train_yolo --data_yaml data_det/data.yaml --model yolov8n.pt --epochs 100 --imgsz 640
+```
+
+### E) Inference + severity
+```bash
 !python -m src.infer_cls_and_severity \
-  --cls_ckpt runs_cls_v3_concat/best.pt \
+  --cls_ckpt runs_cls/best.pt \
   --yolo_ckpt runs/detect/train/weights/best.pt \
   --image_path path/to/image.jpg
-6) Reproducibility Tips (Important for PhD Experiments)
+```
 
-To compare V1 vs V2 vs V3 fairly:
+---
 
-Use the same dataset split (train/val/test)
+## 2) Notes
+- This repo is **dataset-agnostic**: you must supply your own images/labels.
+- For best severity estimation, label **pod** and **lesion** boxes.
+- This code uses PyTorch + timm (for ResNet/ViT) + ultralytics (YOLOv8).
 
-Keep these identical across variants:
-
---epochs, --batch_size, --img_size, --lr, --weight_decay
-
-augmentation settings (do not change between variants)
-
-Use the same seed (e.g., --seed 42)
-
-Use separate --out_dir per run
-
-7) Common Colab Mistakes
-
-If you see SyntaxError: invalid syntax when running shell commands, you probably ran it as Python.
-
-Use:
-
-!command ... (recommended), or
-
-%%bash cell magic
-
-Example:
-
-!python -m src.train_cls --data_dir data_cls --variant cnn
