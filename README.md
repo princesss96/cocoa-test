@@ -1,6 +1,6 @@
 # cocoa-test — Cocoa Pod Disease (Classification + YOLOv8 Lesion Localization)
 
-Repo ini mengandungi eksperimen PhD untuk:
+Repo ini mengandungi eksperimen untuk:
 1) **Image-level classification** (CNN / ViT / Fusion: Concat & Proposed Attention Fusion + EMA)
 2) **Lesion localization** menggunakan **YOLOv8** (bounding box detection)
 3) Semua output/hasil eksperimen disimpan di Google Drive: `cocoa_runs`
