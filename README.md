@@ -69,7 +69,8 @@ cocoa-test/
 │   ├── severity_from_labels.py            # compute GT severity from YOLO labels
 │   ├── estimate_severity_from_yolo.py     # compute predicted severity from YOLO detections
 │   └── compare_severity_csv.py            # compare GT vs predicted severity
-A) Colab Setup (Start from Scratch)
+
+#####A) Colab Setup (Start from Scratch)
 from google.colab import drive
 drive.mount('/content/drive')
 
@@ -82,7 +83,8 @@ drive.mount('/content/drive')
 
 !mkdir -p logs
 !mkdir -p /content/drive/MyDrive/cocoa_runs/logs
-B) Classification (ImageFolder)
+
+#####B) Classification (ImageFolder)
 Dataset Structure (Classification)
 
 Expected structure:
@@ -178,7 +180,8 @@ V2	ViT	0.8849	0.7109	0.6032
 V5	Concat	0.8705	0.6877	0.6115
 V6	Attn Fusion (Proposed)	0.9281	0.8035	0.7565
 V6b	Attn+EMA (0.99)	0.8993	0.7520	0.6770
-C) YOLOv8 Pod–Lesion Localization (Detection for Severity Estimation)
+
+####C) YOLOv8 Pod–Lesion Localization (Detection for Severity Estimation)
 1) Build YOLO-ready dataset for pod + lesion detection
 
 This script:
@@ -372,7 +375,7 @@ Earlier YOLO runs in this repository were based on an older detection setup.
 For proposal-aligned severity estimation, YOLO must be trained using pod + lesion annotations.
 Updated pod–lesion detection results will be reported after retraining.
 
-D) Severity Estimation
+####D) Severity Estimation
 
 Severity is computed after pod and lesion localization.
 
@@ -396,7 +399,8 @@ estimate_severity_from_yolo.py
 computes predicted severity from detected pod and lesion boxes
 compare_severity_csv.py
 compares predicted severity vs ground truth using MAE, RMSE, and correlation
-E) Notes for Thesis / Proposal Alignment
+
+####E) Notes
 Classification branch predicts disease class:
 Fitoftora / Monilia / Sana
 reported in thesis as BPR / FPR / Healthy
