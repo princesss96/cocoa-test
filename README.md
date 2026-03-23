@@ -1,4 +1,4 @@
-# cocoa-test — Cocoa Pod Disease (Classification + YOLOv8 Lesion Localization)
+# cocoa-test — Cocoa Pod Disease (Classification + YOLOv8 Pod–Lesion Localization for Severity Estimation)
 
 Repo ini mengandungi eksperimen untuk:
 1) **Image-level classification** (CNN / ViT / Fusion: Concat & Proposed Attention Fusion + EMA)
@@ -15,8 +15,8 @@ Repo ini mengandungi eksperimen untuk:
 **output eksperimen (logs, checkpoints, runs)**
 - `/content/drive/MyDrive/cocoa_runs`
 
-**YOLO-ready dataset**
-- `/content/drive/MyDrive/yolo_cocoa_v1`
+**YOLO-ready dataset (pod + lesion)**
+- `/content/drive/MyDrive/yolo_cocoa_pod_lesion_v1`
 
 ---
 
@@ -27,18 +27,21 @@ Repo ini mengandungi eksperimen untuk:
 - `Monilia`
 - `Sana`
 
-### Detection (YOLO, 3 kelas)
+### Detection (YOLO, 2 classes: pod + lesion)
 Mapping class id (YOLO txt):
-- `0: Fitoftora`
-- `1: Monilia`
-- `2: Sana`
+- `0: pod`
+- `1: lesion`
 
 YOLO label format (normalized):
 
 class x_center y_center width height
 
-
----
+> Note:
+> Disease category prediction is handled by the **classification branch**.
+> The YOLO branch is used only for **object localization** of the cocoa pod and visible lesion regions.
+> Severity is then computed as:
+>
+> `Severity (%) = (total lesion area inside pod / pod area) × 100`
 
 ## Repo Structure
 
@@ -51,6 +54,11 @@ models.py # HybridClassifier variants: cnn/vit/concat/attn
 ema.py # EMA helper
 utils.py # metrics + checkpoint helpers
 train_v4_stack.py # optional: CNN-features + PCA + stacking baseline (classical ML)
+scripts/
+  build_yolo_pod_lesion_dataset.py   # build pod+lesion YOLO dataset
+  severity_from_labels.py            # compute GT severity from YOLO labels
+  estimate_severity_from_yolo.py     # compute predicted severity from YOLO detections
+  compare_severity_csv.py            # compare GT vs predicted severity
 
 
 ---
@@ -163,15 +171,31 @@ V2	ViT	0.8849	0.7109	0.6032
 V5	Concat	0.8705	0.6877	0.6115
 V6	Attn Fusion (Proposed)	0.9281	0.8035	0.7565
 V6b	Attn+EMA (0.99)	0.8993	0.7520	0.6770
-C) YOLOv8 Lesion Localization (Detection)
-1) Build YOLO-ready dataset from raw data_cocoa_original
+C) YOLOv8 Pod–Lesion Localization (Detection for Severity Estimation)
+1) Build YOLO-ready dataset for **pod + lesion detection**
 
 This script:
 
-reads raw pairs .jpg + .txt (YOLO labels) inside class folders
-copies into yolo_cocoa_v1/images_all and yolo_cocoa_v1/labels_all
-splits into images/{train,val,test} and labels/{train,val,test}
-writes data.yaml
+- reads raw images and corresponding **pod + lesion** YOLO annotation files
+- copies them into `yolo_cocoa_pod_lesion_v1/images_all` and `yolo_cocoa_pod_lesion_v1/labels_all`
+- creates a **leak-free grouped split** into `images/{train,val,test}` and `labels/{train,val,test}`
+- writes `data.yaml` with:
+  - `0: pod`
+  - `1: lesion`
+
+yaml_path = Path(OUT)/"data.yaml"
+with open(yaml_path, "w") as f:
+    f.write(f"""path: {OUT}
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: pod
+  1: lesion
+""")
+print("Wrote:", yaml_path)
+
 import os, glob, shutil, random, re
 from collections import defaultdict
 from pathlib import Path
@@ -267,7 +291,7 @@ model.train(
     batch=16,
     patience=20,
     project="/content/drive/MyDrive/cocoa_runs/yolo",
-    name="yolov8n_lesion_v1",
+    name="yolov8n_pod_lesion_v1",
     seed=42
 )
 YOLOv8n (longer run, higher imgsz)
@@ -281,7 +305,7 @@ model.train(
     batch=16,
     patience=80,
     project="/content/drive/MyDrive/cocoa_runs/yolo",
-    name="yolov8n_lesion_p200",
+    name="yolov8n_pod_lesion_p200",
     seed=42,
     cache=True
 )
@@ -299,7 +323,7 @@ model.train(
     mixup=0.0,
     copy_paste=0.0,
     project="/content/drive/MyDrive/cocoa_runs/yolo",
-    name="yolov8s_img832_negfix",
+    name="yolov8s_pod_lesion_img832",
     seed=42,
     cache=True
 )
@@ -316,6 +340,16 @@ metrics = model.val(
     exist_ok=True
 )
 print(metrics.results_dict)
+
+The YOLO metrics above evaluate **detection quality** only.
+They do not directly measure severity estimation performance.
+
+Severity performance is evaluated separately using:
+- **MAE**
+- **RMSE**
+- **Correlation**
+between predicted severity and annotation-derived ground-truth severity.
+
 4) Resume Training (if training not finished)
 
 If a run finished at epochs=200, you cannot resume unless you increase epochs:
@@ -325,7 +359,7 @@ from ultralytics import YOLO
 last = "/content/drive/MyDrive/cocoa_runs/yolo/yolov8s_img832_negfix/weights/last.pt"
 model = YOLO(last)
 model.train(resume=True, epochs=300)
-5) Audit FP Sana / Error Analysis (save_txt)
+5) Audit pod/lesion predictions / Error Analysis (save_txt)
 from ultralytics import YOLO
 
 model = YOLO("/content/drive/MyDrive/cocoa_runs/yolo/yolov8n_lesion_p200/weights/best.pt")
@@ -342,9 +376,24 @@ model.predict(
     name="test_pred_conf025",
     exist_ok=True
 )
-Detection Results (My current summary)
-Run	Model	Key Note	(Best) mAP50-95
-yolov8n_lesion_v1	YOLOv8n	baseline awal	0.466
-yolov8s_lesion_v1	YOLOv8s	stabil & seimbang	0.491
-yolov8n_lesion_p200	YOLOv8n	precision tinggi, recall rendah	0.521
-yolov8s_img832_negfix	YOLOv8s (best mAP50-95)	0.532
+Detection Results (Current Status)
+
+> The previous YOLO runs in this repository were based on an earlier detection setup.
+> For proposal-aligned severity estimation, YOLO must be retrained on `pod + lesion` annotations.
+> Updated pod–lesion detection results will be reported after retraining.
+
+D) Severity Estimation
+
+Severity is computed after pod and lesion localization.
+
+Formula:
+`Severity (%) = (total lesion area inside pod / pod area) × 100`
+
+Outputs:
+- Ground-truth severity from annotation files
+- Predicted severity from YOLO detections
+- Comparison metrics: MAE, RMSE, Correlation
+
+python scripts/severity_from_labels.py
+python scripts/estimate_severity_from_yolo.py
+python scripts/compare_severity_csv.py
