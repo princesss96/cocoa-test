@@ -12,10 +12,10 @@ Repo ini mengandungi eksperimen PhD untuk:
 **Dataset asal (raw)**
 - `/content/drive/MyDrive/data_cocoa_original`
 
-**Semua output eksperimen (logs, checkpoints, runs)**
+**output eksperimen (logs, checkpoints, runs)**
 - `/content/drive/MyDrive/cocoa_runs`
 
-**YOLO-ready dataset (dibina dari raw)**
+**YOLO-ready dataset**
 - `/content/drive/MyDrive/yolo_cocoa_v1`
 
 ---
