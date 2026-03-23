@@ -85,7 +85,6 @@ data_cls/
 My runs use (grouped split, leak-free):
 
 /content/drive/MyDrive/data_cls_crop_grouped
-
 Train Command Template
 !python -m src.train_cls \
   --data_dir /content/drive/MyDrive/data_cls_crop_grouped \
@@ -96,19 +95,12 @@ Train Command Template
   --out_dir /content/drive/MyDrive/cocoa_runs/<RUN_NAME> \
   2>&1 | tee /content/drive/MyDrive/cocoa_runs/logs/<LOG_NAME>.log
 Variants (Thesis IDs)
-
 V1 = CNN baseline (--variant cnn)
-
 V2 = ViT baseline (--variant vit)
-
 V5 = CNN+ViT Concat baseline (--variant concat)
-
 V6 = Proposed Attention Fusion (--variant attn)
-
 V6b = Proposed Attention Fusion + EMA tuned (--variant attn --use_ema --ema_decay 0.99)
-
 (Ablation negatif) EMA terlalu tinggi ema_decay=0.999 boleh collapse kepada kelas majoriti
-
 Run Commands (Copy-Paste)
 V1 — CNN
 !python -m src.train_cls \
@@ -162,11 +154,8 @@ Output Files (Classification)
 Each run folder saves:
 
 best.pt (best macro-F1 on val)
-
 last.pt (last epoch)
-
 console log in /content/drive/MyDrive/cocoa_runs/logs/*.log
-
 Classification Results Summary (My latest)
 ID	Model	Test Acc	Macro-F1	Kappa
 V1	CNN	0.9137	0.7737	0.7231
@@ -180,13 +169,9 @@ C) YOLOv8 Lesion Localization (Detection)
 This script:
 
 reads raw pairs .jpg + .txt (YOLO labels) inside class folders
-
 copies into yolo_cocoa_v1/images_all and yolo_cocoa_v1/labels_all
-
 splits into images/{train,val,test} and labels/{train,val,test}
-
 writes data.yaml
-
 import os, glob, shutil, random, re
 from collections import defaultdict
 from pathlib import Path
@@ -362,4 +347,4 @@ Run	Model	Key Note	(Best) mAP50-95
 yolov8n_lesion_v1	YOLOv8n	baseline awal	0.466
 yolov8s_lesion_v1	YOLOv8s	stabil & seimbang	0.491
 yolov8n_lesion_p200	YOLOv8n	precision tinggi, recall rendah	0.521
-yolov8s_img832_negfix	YOLOv8s	calon utama (best mAP50-95)	0.532
+yolov8s_img832_negfix	YOLOv8s (best mAP50-95)	0.532
