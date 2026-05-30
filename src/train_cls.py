@@ -152,7 +152,7 @@ def main():
 
         print(f"train_loss={train_loss:.4f} | "
               f"val_acc={metrics['accuracy']:.4f} | "
-              f"val_bal_acc={metrics{'balanced_accuracy']:.4f} | "
+              f"val_bal_acc={metrics['balanced_accuracy']:.4f} | "
               f"val_macro_f1={metrics['macro_f1']:.4f} | "
               f"val_kappa={metrics['kappa']:.4f}")
 
