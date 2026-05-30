@@ -58,10 +58,11 @@ def softmax_to_pred(logits: torch.Tensor) -> torch.Tensor:
 
 def compute_classification_metrics(y_true: List[int], y_pred: List[int]) -> Dict[str, float]:
     """Compute common metrics: accuracy, macro-f1, precision, recall, Cohen's kappa."""
-    from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, cohen_kappa_score, confusion_matrix
+    from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, precision_score, recall_score, cohen_kappa_score, confusion_matrix
 
     metrics = {
         "accuracy": float(accuracy_score(y_true, y_pred)),
+        "balanced_accuracy":float(balanced_accuracy_score(y_true, y_pred)),
         "macro_f1": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
         "precision_macro": float(precision_score(y_true, y_pred, average="macro", zero_division=0)),
         "recall_macro": float(recall_score(y_true, y_pred, average="macro", zero_division=0)),
